@@ -1,2 +1,29 @@
 ### Health Check
 GET http://localhost:4000/v1/healthcheck
+
+### Get Single Movie
+GET http://localhost:4000/v1/movies/1
+
+### Create Movie
+POST http://localhost:4000/v1/movies
+Content-Type: application/json
+
+{
+    "title": "The Matrix",
+    "year": 1999,
+    "runtime": 136,
+    "genres": [
+        "Action",
+        "Sci-Fi"
+    ],
+    "director": "Lana Wachowski",
+    "actors": [
+        "Keanu Reeves",
+        "Laurence Fishburne",
+        "Carrie-Anne Moss",
+        "Hugo Weaving"
+    ],
+    "plot": "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.",
+    "posterUrl": "https://images-na.ssl-images-amazon.com/images/I/51EG732BV3L._AC_.jpg"
+}
+
