@@ -2,19 +2,45 @@ package main
 
 import (
 	"api.go-rifqio.my.id/internal/data"
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"time"
 )
 
 func (app *application) createMovieHandler(res http.ResponseWriter, req *http.Request) {
-	fmt.Fprintln(res, "Create a new movie")
+	type CreateMovieDTO struct {
+		Title     string       `json:"title"`
+		Year      int32        `json:"year"`
+		Runtime   data.Runtime `json:"runtime"`
+		Genres    []string     `json:"genres"`
+		Director  string       `json:"director"`
+		Actor     []string     `json:"actor"`
+		Plot      string       `json:"plot"`
+		PosterURL string       `json:"poster_url"`
+	}
+
+	body := new(CreateMovieDTO)
+
+	err := json.NewDecoder(req.Body).Decode(&body)
+	if err != nil {
+		app.errorResponse(res, req, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	err = app.writeJSON(res, 201, data.Response{
+		Status:  true,
+		Result:  body.Title,
+		Message: "Movie Created Successfully",
+	}, nil)
+	if err != nil {
+		app.serverErrorResponse(res, req, err)
+	}
 }
 
 func (app *application) showMovieHandler(res http.ResponseWriter, req *http.Request) {
 	id, err := app.readIDParam(req)
 	if err != nil {
-		http.NotFound(res, req)
+		app.notFoundResponse(res, req)
 		return
 	}
 
@@ -39,7 +65,6 @@ func (app *application) showMovieHandler(res http.ResponseWriter, req *http.Requ
 	}, nil)
 
 	if err != nil {
-		app.logger.Println(err)
-		http.Error(res, "Internal Server Error", http.StatusInternalServerError)
+		app.serverErrorResponse(res, req, err)
 	}
 }
