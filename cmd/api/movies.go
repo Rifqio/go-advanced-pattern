@@ -2,30 +2,53 @@ package main
 
 import (
 	"api.go-rifqio.my.id/internal/data"
-	"encoding/json"
+	"api.go-rifqio.my.id/internal/validator"
 	"net/http"
 	"time"
 )
 
 func (app *application) createMovieHandler(res http.ResponseWriter, req *http.Request) {
 	type CreateMovieDTO struct {
-		Title     string       `json:"title"`
-		Year      int32        `json:"year"`
-		Runtime   data.Runtime `json:"runtime"`
-		Genres    []string     `json:"genres"`
-		Director  string       `json:"director"`
-		Actor     []string     `json:"actor"`
-		Plot      string       `json:"plot"`
-		PosterURL string       `json:"poster_url"`
+		Title     string   `json:"title"`
+		Year      int32    `json:"year"`
+		Runtime   int32    `json:"runtime"`
+		Genres    []string `json:"genres"`
+		Director  string   `json:"director"`
+		Actor     []string `json:"actor"`
+		Plot      string   `json:"plot"`
+		PosterURL string   `json:"poster_url"`
 	}
 
 	body := new(CreateMovieDTO)
 
-	err := json.NewDecoder(req.Body).Decode(&body)
+	err := app.readJSON(res, req, &body)
 	if err != nil {
 		app.errorResponse(res, req, http.StatusBadRequest, err.Error())
 		return
 	}
+
+	movie := &data.Movie{
+		Title:     body.Title,
+		Year:      body.Year,
+		Runtime:   body.Runtime,
+		Genres:    body.Genres,
+		Director:  body.Director,
+		Actor:     body.Actor,
+		Plot:      body.Plot,
+		PosterURL: body.PosterURL,
+		CreatedAt: time.Time{},
+		Version:   0,
+	}
+
+	validate := validator.New()
+
+	data.ValidateMovie(validate, movie)
+
+	if !validate.Valid() {
+		app.failedValidationResponse(res, req, validate.Errors)
+		return
+	}
+	//
 
 	err = app.writeJSON(res, 201, data.Response{
 		Status:  true,
