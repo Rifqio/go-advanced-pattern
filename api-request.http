@@ -2,28 +2,47 @@
 GET http://localhost:4000/v1/healthcheck
 
 ### Get Single Movie
-GET http://localhost:4000/v1/movies/1
+GET http://localhost:4000/v1/movies/4
 
 ### Create Movie
 POST http://localhost:4000/v1/movies
 Content-Type: application/json
 
 {
-    "title": "The Matrix",
-    "year": 2025,
-    "runtime": 100,
-    "genres": [
-        "Action",
-        "Sci-Fi"
-    ],
-    "director": "Lana Wachowski",
-    "actors": [
-        "Keanu Reeves",
-        "Laurence Fishburne",
-        "Carrie-Anne Moss",
-        "Hugo Weaving"
-    ],
-    "plot": "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.",
-    "posterUrl": "https://images-na.ssl-images-amazon.com/images/I/51EG732BV3L._AC_.jpg"
+  "title": "Forrest Gump",
+  "year": 1994,
+  "runtime": 142,
+  "genres": [
+    "Drama",
+    "Romance"
+  ],
+  "director": "Robert Zemeckis",
+  "actors": [
+    "Tom Hanks",
+    "Robin Wright",
+    "Gary Sinise"
+  ],
+  "plot": "The presidencies of Kennedy and Johnson, the events of Vietnam, Watergate, and other historical events unfold through the perspective of an Alabama man with an IQ of 75.",
+  "poster_url": "https://www.gstatic.com/webp/gallery/4.jpg"
 }
+
+###
+//{
+//    "title": "The Matrix",
+//    "year": 2002,
+//    "runtime": 100,
+//    "genres": [
+//        "Action",
+//        "Sci-Fi"
+//    ],
+//    "director": "Lana Wachowski",
+//    "actors": [
+//        "Keanu Reeves",
+//        "Laurence Fishburne",
+//        "Carrie-Anne Moss",
+//        "Hugo Weaving"
+//    ],
+//    "plot": "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.",
+//    "poster_url": "https://images-na.ssl-images-amazon.com/images/I/51EG732BV3L._AC_.jpg"
+//}
 

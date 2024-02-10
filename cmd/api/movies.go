@@ -3,8 +3,9 @@ package main
 import (
 	"api.go-rifqio.my.id/internal/data"
 	"api.go-rifqio.my.id/internal/validator"
+	"errors"
+	"fmt"
 	"net/http"
-	"time"
 )
 
 func (app *application) createMovieHandler(res http.ResponseWriter, req *http.Request) {
@@ -14,7 +15,7 @@ func (app *application) createMovieHandler(res http.ResponseWriter, req *http.Re
 		Runtime   int32    `json:"runtime"`
 		Genres    []string `json:"genres"`
 		Director  string   `json:"director"`
-		Actor     []string `json:"actor"`
+		Actors    []string `json:"actors"`
 		Plot      string   `json:"plot"`
 		PosterURL string   `json:"poster_url"`
 	}
@@ -33,11 +34,9 @@ func (app *application) createMovieHandler(res http.ResponseWriter, req *http.Re
 		Runtime:   body.Runtime,
 		Genres:    body.Genres,
 		Director:  body.Director,
-		Actor:     body.Actor,
+		Actors:    body.Actors,
 		Plot:      body.Plot,
 		PosterURL: body.PosterURL,
-		CreatedAt: time.Time{},
-		Version:   0,
 	}
 
 	validate := validator.New()
@@ -48,13 +47,22 @@ func (app *application) createMovieHandler(res http.ResponseWriter, req *http.Re
 		app.failedValidationResponse(res, req, validate.Errors)
 		return
 	}
-	//
+
+	err = app.models.Movie.Insert(movie)
+	if err != nil {
+		app.serverErrorResponse(res, req, err)
+		return
+	}
+
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/v1/movies/%d", movie.ID))
 
 	err = app.writeJSON(res, 201, data.Response{
 		Status:  true,
-		Result:  body.Title,
+		Result:  movie,
 		Message: "Movie Created Successfully",
-	}, nil)
+	}, headers)
+
 	if err != nil {
 		app.serverErrorResponse(res, req, err)
 	}
@@ -67,18 +75,13 @@ func (app *application) showMovieHandler(res http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	movie := data.Movie{
-		ID:        id,
-		Title:     "The Matrix",
-		Year:      1999,
-		Runtime:   136,
-		Genres:    []string{"Action", "Sci-Fi"},
-		Director:  "Lana Wachowski",
-		Actor:     []string{"Keanu Reeves", "Laurence Fishburne", "Carrie-Anne Moss", "Hugo Weaving"},
-		Plot:      "A computer hacker learns from mysterious rebels about the true nature of his reality and his role in the war against its controllers.",
-		PosterURL: "https://images-na.ssl-images-amazon.com/images/I/51EG732BV3L._AC_.jpg",
-		CreatedAt: time.Now(),
-		Version:   1,
+	movie, err := app.models.Movie.Get(id)
+
+	if err != nil {
+		if errors.Is(err, data.ErrNoRecordsFound) {
+			app.notFoundResponse(res, req)
+		}
+		app.serverErrorResponse(res, req, err)
 	}
 
 	err = app.writeJSON(res, 200, data.Response{
