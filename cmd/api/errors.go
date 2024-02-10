@@ -11,7 +11,7 @@ func (app *application) logError(_ *http.Request, err error) {
 
 // Base template for error response
 func (app *application) errorResponse(res http.ResponseWriter, req *http.Request, status int, message interface{}) {
-	baseResponse := envelope{"status": false, "error": message}
+	baseResponse := envelope{"status": false, "statusCode": status, "error": message}
 
 	err := app.writeJSON(res, status, baseResponse, nil)
 	if err != nil {

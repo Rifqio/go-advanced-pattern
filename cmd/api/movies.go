@@ -57,11 +57,13 @@ func (app *application) createMovieHandler(res http.ResponseWriter, req *http.Re
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("/v1/movies/%d", movie.ID))
 
-	err = app.writeJSON(res, 201, data.Response{
-		Status:  true,
-		Result:  movie,
-		Message: "Movie Created Successfully",
-	}, headers)
+	response := data.NewResponse()
+
+	response.StatusCode = http.StatusCreated
+	response.Result = movie
+	response.Message = "Movie Created Successfully"
+
+	err = app.writeJSON(res, response.StatusCode, response, headers)
 
 	if err != nil {
 		app.serverErrorResponse(res, req, err)
@@ -84,11 +86,11 @@ func (app *application) showMovieHandler(res http.ResponseWriter, req *http.Requ
 		app.serverErrorResponse(res, req, err)
 	}
 
-	err = app.writeJSON(res, 200, data.Response{
-		Status:  true,
-		Result:  movie,
-		Message: "Movie Retrieved Successfully",
-	}, nil)
+	response := data.NewResponse()
+	response.Result = movie
+	response.Message = "Movie Retrieved Successfully"
+
+	err = app.writeJSON(res, 200, response, nil)
 
 	if err != nil {
 		app.serverErrorResponse(res, req, err)

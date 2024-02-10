@@ -9,22 +9,25 @@ POST http://localhost:4000/v1/movies
 Content-Type: application/json
 
 {
-  "title": "Forrest Gump",
-  "year": 1994,
-  "runtime": 142,
+  "title": "Interstellar",
+  "year": 2014,
+  "runtime": 169,
   "genres": [
+    "Adventure",
     "Drama",
-    "Romance"
+    "Sci-Fi"
   ],
-  "director": "Robert Zemeckis",
+  "director": "Christopher Nolan",
   "actors": [
-    "Tom Hanks",
-    "Robin Wright",
-    "Gary Sinise"
+    "Matthew McConaughey",
+    "Anne Hathaway",
+    "Jessica Chastain",
+    "Michael Caine"
   ],
-  "plot": "The presidencies of Kennedy and Johnson, the events of Vietnam, Watergate, and other historical events unfold through the perspective of an Alabama man with an IQ of 75.",
-  "poster_url": "https://www.gstatic.com/webp/gallery/4.jpg"
+  "plot": "A team of explorers travels through a wormhole in space in an attempt to ensure humanity's survival.",
+  "poster_url": "https://images-na.ssl-images-amazon.com/images/I/71v1icHXOWl._AC_SL1072_.jpg"
 }
+
 
 ###
 //{
