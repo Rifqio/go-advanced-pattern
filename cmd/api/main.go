@@ -72,6 +72,9 @@ func openDB(cfg config) (*sql.DB, error) {
 		return nil, err
 	}
 
+	db.SetMaxOpenConns(25)
+	db.SetMaxIdleConns(2)
+	db.SetConnMaxIdleTime(4 * time.Hour)
 	// Create a context with 5 second timeout deadline
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
