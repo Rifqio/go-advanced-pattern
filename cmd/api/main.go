@@ -7,6 +7,9 @@ import (
 	"flag"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/rs/zerolog"
+	sqldblogger "github.com/simukti/sqldb-logger"
+	"github.com/simukti/sqldb-logger/logadapter/zerologadapter"
 	"log"
 	"net/http"
 	"os"
@@ -75,6 +78,13 @@ func openDB(cfg config) (*sql.DB, error) {
 		return nil, err
 	}
 
+	loggerAdapter := zerologadapter.New(zerolog.New(os.Stdout))
+	db = sqldblogger.OpenDriver(
+		cfg.db.dsn,
+		db.Driver(),
+		loggerAdapter,
+		sqldblogger.WithSQLQueryAsMessage(true),
+	)
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(2)
 	db.SetConnMaxIdleTime(4 * time.Hour)
