@@ -5,6 +5,7 @@ import (
 	"api.go-rifqio.my.id/internal/validator"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -94,5 +95,77 @@ func (app *application) showMovieHandler(res http.ResponseWriter, req *http.Requ
 
 	if err != nil {
 		app.serverErrorResponse(res, req, err)
+	}
+}
+
+func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Request) {
+	id, err := app.readIDParam(req)
+	if err != nil {
+		app.notFoundResponse(res, req)
+		return
+	}
+
+	type UpdateMovieDTO struct {
+		Title     string   `json:"title"`
+		Year      int32    `json:"year"`
+		Runtime   int32    `json:"runtime"`
+		Genres    []string `json:"genres"`
+		Director  string   `json:"director"`
+		Actors    []string `json:"actors"`
+		Plot      string   `json:"plot"`
+		PosterURL string   `json:"poster_url"`
+	}
+
+	body := new(UpdateMovieDTO)
+
+	err = app.readJSON(res, req, &body)
+	if err != nil {
+		app.errorResponse(res, req, http.StatusBadRequest, err.Error())
+	}
+
+	movie, err := app.models.Movie.Get(id)
+	log.Print(movie)
+	if err != nil {
+		if errors.Is(err, data.ErrNoRecordsFound) {
+			app.notFoundResponse(res, req)
+		}
+		app.serverErrorResponse(res, req, err)
+		return
+	}
+
+	movie = &data.Movie{
+		Title:     body.Title,
+		Year:      body.Year,
+		Runtime:   body.Runtime,
+		Genres:    body.Genres,
+		Director:  body.Director,
+		Actors:    body.Actors,
+		Plot:      body.Plot,
+		PosterURL: body.PosterURL,
+		ID:        id,
+	}
+
+	validate := validator.New()
+
+	if data.ValidateMovie(validate, movie); !validate.Valid() {
+		app.failedValidationResponse(res, req, validate.Errors)
+	}
+
+	err = app.models.Movie.Update(movie)
+	if err != nil {
+		log.Print(err, "Error 1")
+		app.serverErrorResponse(res, req, err)
+		return
+	}
+
+	response := data.NewResponse()
+	response.Result = movie
+	response.Message = "Movie Updated Successfully"
+
+	err = app.writeJSON(res, 200, response, nil)
+
+	if err != nil {
+		app.serverErrorResponse(res, req, err)
+		return
 	}
 }
