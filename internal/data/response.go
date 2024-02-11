@@ -1,10 +1,10 @@
 package data
 
 type Response struct {
-	Status     bool   `json:"status"`
-	StatusCode int    `json:"statusCode"`
-	Result     any    `json:"result"`
-	Message    string `json:"message"`
+	Status     bool        `json:"status"`
+	StatusCode int         `json:"statusCode"`
+	Result     interface{} `json:"result"`
+	Message    string      `json:"message"`
 }
 
 func NewResponse() Response {

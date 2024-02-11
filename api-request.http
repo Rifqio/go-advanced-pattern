@@ -2,7 +2,7 @@
 GET http://localhost:4000/v1/healthcheck
 
 ### Get Single Movie
-GET http://localhost:4000/v1/movies/11
+GET http://localhost:4000/v1/movies/10
 
 ### Create Movie
 POST http://localhost:4000/v1/movies
@@ -52,3 +52,5 @@ Content-Type: application/json
   "poster_url": "https://images-na.ssl-images-amazon.com/images/I/71v1icHXOWl._AC_SL1072_.jpg"
 }
 
+### Delete Movie
+DELETE http://localhost:4000/v1/movies/14

@@ -5,7 +5,6 @@ import (
 	"api.go-rifqio.my.id/internal/validator"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -68,6 +67,7 @@ func (app *application) createMovieHandler(res http.ResponseWriter, req *http.Re
 
 	if err != nil {
 		app.serverErrorResponse(res, req, err)
+		return
 	}
 }
 
@@ -83,8 +83,10 @@ func (app *application) showMovieHandler(res http.ResponseWriter, req *http.Requ
 	if err != nil {
 		if errors.Is(err, data.ErrNoRecordsFound) {
 			app.notFoundResponse(res, req)
+			return
 		}
 		app.serverErrorResponse(res, req, err)
+		return
 	}
 
 	response := data.NewResponse()
@@ -124,10 +126,11 @@ func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Re
 	}
 
 	movie, err := app.models.Movie.Get(id)
-	log.Print(movie)
+
 	if err != nil {
 		if errors.Is(err, data.ErrNoRecordsFound) {
 			app.notFoundResponse(res, req)
+			return
 		}
 		app.serverErrorResponse(res, req, err)
 		return
@@ -153,7 +156,6 @@ func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Re
 
 	err = app.models.Movie.Update(movie)
 	if err != nil {
-		log.Print(err, "Error 1")
 		app.serverErrorResponse(res, req, err)
 		return
 	}
@@ -164,6 +166,34 @@ func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Re
 
 	err = app.writeJSON(res, 200, response, nil)
 
+	if err != nil {
+		app.serverErrorResponse(res, req, err)
+		return
+	}
+}
+
+func (app *application) deleteMovieHandler(res http.ResponseWriter, req *http.Request) {
+	id, err := app.readIDParam(req)
+	if err != nil {
+		app.serverErrorResponse(res, req, err)
+		return
+	}
+
+	err = app.models.Movie.Delete(id)
+	if err != nil {
+		if errors.Is(err, data.ErrNoRecordsFound) {
+			app.notFoundResponse(res, req)
+			return
+		}
+		app.serverErrorResponse(res, req, err)
+		return
+	}
+
+	response := data.NewResponse()
+	response.Result = envelope{"id": id}
+	response.Message = fmt.Sprintf("Movie With The Following ID %d has Been Deleted", id)
+
+	err = app.writeJSON(res, 200, response, nil)
 	if err != nil {
 		app.serverErrorResponse(res, req, err)
 		return
