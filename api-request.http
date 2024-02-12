@@ -51,6 +51,13 @@ Content-Type: application/json
   "plot": "A team of explorers travels through a wormhole in space in an attempt to ensure humanity's survival.",
   "poster_url": "https://images-na.ssl-images-amazon.com/images/I/71v1icHXOWl._AC_SL1072_.jpg"
 }
+### Update Movie
+PATCH http://localhost:4000/v1/movies/12
+Content-Type: application/json
+
+{
+  "title": "Interstellar"
+}
 
 ### Delete Movie
 DELETE http://localhost:4000/v1/movies/13

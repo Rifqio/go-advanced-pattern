@@ -107,15 +107,17 @@ func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Re
 		return
 	}
 
+	// Changing the struct to pointer is to ignore the nil values
+	// Struct don't need to change to pointer since the zero-values of struct is nil
 	type UpdateMovieDTO struct {
-		Title     string   `json:"title"`
-		Year      int32    `json:"year"`
-		Runtime   int32    `json:"runtime"`
+		Title     *string  `json:"title"`
+		Year      *int32   `json:"year"`
+		Runtime   *int32   `json:"runtime"`
 		Genres    []string `json:"genres"`
-		Director  string   `json:"director"`
+		Director  *string  `json:"director"`
 		Actors    []string `json:"actors"`
-		Plot      string   `json:"plot"`
-		PosterURL string   `json:"poster_url"`
+		Plot      *string  `json:"plot"`
+		PosterURL *string  `json:"poster_url"`
 	}
 
 	body := new(UpdateMovieDTO)
@@ -136,17 +138,37 @@ func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Re
 		return
 	}
 
-	movie = &data.Movie{
-		Title:     body.Title,
-		Year:      body.Year,
-		Runtime:   body.Runtime,
-		Genres:    body.Genres,
-		Director:  body.Director,
-		Actors:    body.Actors,
-		Plot:      body.Plot,
-		PosterURL: body.PosterURL,
-		ID:        id,
+	if body.Title != nil {
+		movie.Title = *body.Title
 	}
+
+	if body.Year != nil {
+		movie.Year = *body.Year
+	}
+
+	if body.Runtime != nil {
+		movie.Runtime = *body.Runtime
+	}
+
+	if body.Genres != nil {
+		movie.Genres = body.Genres
+	}
+
+	if body.PosterURL != nil {
+		movie.PosterURL = *body.PosterURL
+	}
+
+	//movie = &data.Movie{
+	//	Title:     *body.Title,
+	//	Year:      *body.Year,
+	//	Runtime:   *body.Runtime,
+	//	Genres:    body.Genres,
+	//	Director:  *body.Director,
+	//	Actors:    body.Actors,
+	//	Plot:      *body.Plot,
+	//	PosterURL: *body.PosterURL,
+	//	ID:        id,
+	//}
 
 	validate := validator.New()
 
@@ -156,6 +178,10 @@ func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Re
 
 	err = app.models.Movie.Update(movie)
 	if err != nil {
+		if errors.Is(err, data.ErrEditConflict) {
+			app.editConflictResponse(res, req)
+			return
+		}
 		app.serverErrorResponse(res, req, err)
 		return
 	}
