@@ -1,16 +1,57 @@
 package main
 
 import (
+	"api.go-rifqio.my.id/internal/validator"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
+	"strings"
 )
 
 type envelope map[string]interface{}
+
+// readString will return a string value from query string or provided default value
+func (app *application) readString(qs url.Values, key string, defaultValue string) string {
+	queryKey := qs.Get(key)
+
+	if queryKey == "" {
+		return defaultValue
+	}
+
+	return queryKey
+}
+
+// readInt read string value from query string and convert to integer before returning
+func (app *application) readInt(qs url.Values, key string, defaultValue int, v *validator.Validator) int {
+	queryKey := qs.Get(key)
+
+	if queryKey == "" {
+		return defaultValue
+	}
+
+	val, err := strconv.Atoi(queryKey)
+	if err != nil {
+		v.AddError(key, "key must be an integer value")
+		return defaultValue
+	}
+
+	return val
+}
+
+// readCSV will read comma separated value, example on this route
+// /v1/movies?title=godfather&genres=crime,drama
+func (app *application) readCSV(qs url.Values, key string, defaultValue []string) []string {
+	csv := qs.Get(key)
+	if csv == "" {
+		return defaultValue
+	}
+	return strings.Split(csv, ",")
+}
 
 func (app *application) readIDParam(req *http.Request) (int64, error) {
 	params := httprouter.ParamsFromContext(req.Context())
