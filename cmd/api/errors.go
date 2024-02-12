@@ -21,7 +21,7 @@ func (app *application) errorResponse(res http.ResponseWriter, req *http.Request
 }
 
 // Server error response will occur at unexpected error runtime
-func (app *application) serverErrorResponse(res http.ResponseWriter, req *http.Request, err error) {
+func (app *application) internalServerErrorResponse(res http.ResponseWriter, req *http.Request, err error) {
 	app.logError(req, err)
 	message := "The server encountered a problem and cannot process incoming request"
 	app.errorResponse(res, req, http.StatusInternalServerError, message)
