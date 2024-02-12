@@ -23,6 +23,13 @@ type Movie struct {
 	Version   int32     `json:"-"`
 }
 
+/*
+* Query Cheat Sheet
+* DB.Query() -is used for SELECT queries which return multiple rows.
+* DB.QueryRow() -is used for SELECT queries which return a single row.
+* DB.Exec() -is used for INSERT, UPDATE and DELETE queries, and it does not return any rows.
+ */
+
 // Define a MovieModel struct type which wraps a sql.DB connection pool.
 type MovieModel struct {
 	DB *sql.DB
@@ -98,6 +105,79 @@ func (m *MovieModel) Get(id int64) (*Movie, error) {
 	return &movie, nil
 }
 
+func (m *MovieModel) GetAll(title string, genres []string, filter Filters) ([]*Movie, error) {
+	// @> means array operator for Postgres
+	// implement full text search on title...
+	// to_tsvector() takes a string and split to lexemes (one word or several word)
+	// specifying 'simple' means transpose the title to lowercase
+	// plainto_tsquery() function takes a search value and turns into formatted query term PostgreSQL
+	// the @@ operator is the matches operator. In our statement we are using it to check whether
+	// the generated query term matches the lexemes.
+	query := `select * from movies 
+			  -- where (lower(title) = lower($1) or $1 = '')
+         	  where (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) or $1 = '')
+         	  and (genres @> $2 or $2 = '{}')
+         	  order by id`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := m.DB.QueryContext(ctx, query, title, pq.Array(genres))
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var movies []*Movie
+
+	for rows.Next() {
+		var movie Movie
+
+		err := rows.Scan(
+			&movie.ID,
+			&movie.Title,
+			&movie.Year,
+			&movie.Runtime,
+			pq.Array(&movie.Genres),
+			&movie.Director,
+			pq.Array(&movie.Actors),
+			&movie.Plot,
+			&movie.PosterURL,
+			&movie.CreatedAt,
+			&movie.Version,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		movies = append(movies, &movie)
+	}
+
+	if rows.Err() != nil {
+		return nil, err
+	}
+
+	return movies, nil
+}
+
+func (m *MovieModel) Count() (int, error) {
+	query := `select count(*) from movies`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	var count int
+
+	err := m.DB.QueryRowContext(ctx, query).Scan(&count)
+
+	if err != nil {
+		return 0, nil
+	}
+
+	return count, nil
+}
 func (m *MovieModel) Update(movie *Movie) error {
 	query := `update movies set title = $1, year = $2, runtime = $3, genres = $4, 
               director = $5, actors = $6, plot = $7, poster_url = $8, version = version + 1 
