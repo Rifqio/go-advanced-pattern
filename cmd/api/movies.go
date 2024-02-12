@@ -50,7 +50,7 @@ func (app *application) createMovieHandler(res http.ResponseWriter, req *http.Re
 
 	err = app.models.Movie.Insert(movie)
 	if err != nil {
-		app.serverErrorResponse(res, req, err)
+		app.internalServerErrorResponse(res, req, err)
 		return
 	}
 
@@ -66,7 +66,7 @@ func (app *application) createMovieHandler(res http.ResponseWriter, req *http.Re
 	err = app.writeJSON(res, response.StatusCode, response, headers)
 
 	if err != nil {
-		app.serverErrorResponse(res, req, err)
+		app.internalServerErrorResponse(res, req, err)
 		return
 	}
 }
@@ -85,7 +85,7 @@ func (app *application) showMovieHandler(res http.ResponseWriter, req *http.Requ
 			app.notFoundResponse(res, req)
 			return
 		}
-		app.serverErrorResponse(res, req, err)
+		app.internalServerErrorResponse(res, req, err)
 		return
 	}
 
@@ -96,10 +96,61 @@ func (app *application) showMovieHandler(res http.ResponseWriter, req *http.Requ
 	err = app.writeJSON(res, 200, response, nil)
 
 	if err != nil {
-		app.serverErrorResponse(res, req, err)
+		app.internalServerErrorResponse(res, req, err)
 	}
 }
 
+func (app *application) showMoviesHandler(res http.ResponseWriter, req *http.Request) {
+	var requestQuery struct {
+		Title  string   `json:"title"`
+		Genres []string `json:"genres"`
+		data.Filters
+	}
+
+	validate := validator.New()
+
+	// Call req.url.Query() to get the url.Values map containing query string data
+	qs := req.URL.Query()
+
+	requestQuery.Title = app.readString(qs, "title", "")
+	requestQuery.Genres = app.readCSV(qs, "genres", []string{})
+
+	requestQuery.Filters.Page = app.readInt(qs, "page", 1, validate)
+	requestQuery.Filters.PageSize = app.readInt(qs, "page_size", 10, validate)
+
+	requestQuery.Sort = app.readString(qs, "sort", "id")
+	requestQuery.SortSafeList = []string{"id", "title", "year", "runtime", "-id", "-title", "-runtime"}
+
+	if data.ValidateFilters(validate, &requestQuery.Filters); !validate.Valid() {
+		app.failedValidationResponse(res, req, validate.Errors)
+		return
+	}
+
+	count, err := app.models.Movie.Count()
+	movies, err := app.models.Movie.GetAll(requestQuery.Title, requestQuery.Genres, requestQuery.Filters)
+
+	if err != nil {
+		app.internalServerErrorResponse(res, req, err)
+		return
+	}
+
+	response := data.NewResponse()
+	response.Result = movies
+	response.Message = "Movies Fetched Successfully"
+	response.Pagination = data.Pagination{
+		PageSize:  requestQuery.PageSize,
+		Page:      requestQuery.Page,
+		TotalData: count,
+		Sort:      requestQuery.Sort,
+	}
+
+	err = app.writeJSON(res, 200, response, nil)
+
+	if err != nil {
+		app.internalServerErrorResponse(res, req, err)
+		return
+	}
+}
 func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Request) {
 	id, err := app.readIDParam(req)
 	if err != nil {
@@ -134,7 +185,7 @@ func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Re
 			app.notFoundResponse(res, req)
 			return
 		}
-		app.serverErrorResponse(res, req, err)
+		app.internalServerErrorResponse(res, req, err)
 		return
 	}
 
@@ -182,7 +233,7 @@ func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Re
 			app.editConflictResponse(res, req)
 			return
 		}
-		app.serverErrorResponse(res, req, err)
+		app.internalServerErrorResponse(res, req, err)
 		return
 	}
 
@@ -193,7 +244,7 @@ func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Re
 	err = app.writeJSON(res, 200, response, nil)
 
 	if err != nil {
-		app.serverErrorResponse(res, req, err)
+		app.internalServerErrorResponse(res, req, err)
 		return
 	}
 }
@@ -201,7 +252,7 @@ func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Re
 func (app *application) deleteMovieHandler(res http.ResponseWriter, req *http.Request) {
 	id, err := app.readIDParam(req)
 	if err != nil {
-		app.serverErrorResponse(res, req, err)
+		app.internalServerErrorResponse(res, req, err)
 		return
 	}
 
@@ -211,7 +262,7 @@ func (app *application) deleteMovieHandler(res http.ResponseWriter, req *http.Re
 			app.notFoundResponse(res, req)
 			return
 		}
-		app.serverErrorResponse(res, req, err)
+		app.internalServerErrorResponse(res, req, err)
 		return
 	}
 
@@ -221,7 +272,7 @@ func (app *application) deleteMovieHandler(res http.ResponseWriter, req *http.Re
 
 	err = app.writeJSON(res, 200, response, nil)
 	if err != nil {
-		app.serverErrorResponse(res, req, err)
+		app.internalServerErrorResponse(res, req, err)
 		return
 	}
 }
