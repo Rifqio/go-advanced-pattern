@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/lib/pq"
 	"time"
 )
@@ -105,7 +106,7 @@ func (m *MovieModel) Get(id int64) (*Movie, error) {
 	return &movie, nil
 }
 
-func (m *MovieModel) GetAll(title string, genres []string, filter Filters) ([]*Movie, error) {
+func (m *MovieModel) GetAll(title string, genres []string, filter Filters) ([]*Movie, PaginationMetadata, error) {
 	// @> means array operator for Postgres
 	// implement full text search on title...
 	// to_tsvector() takes a string and split to lexemes (one word or several word)
@@ -113,28 +114,36 @@ func (m *MovieModel) GetAll(title string, genres []string, filter Filters) ([]*M
 	// plainto_tsquery() function takes a search value and turns into formatted query term PostgreSQL
 	// the @@ operator is the matches operator. In our statement we are using it to check whether
 	// the generated query term matches the lexemes.
-	query := `select * from movies 
-			  -- where (lower(title) = lower($1) or $1 = '')
-         	  where (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) or $1 = '')
-         	  and (genres @> $2 or $2 = '{}')
-         	  order by id`
+
+	// Also this workaround using fmt.Sprintf() since order by has no placeholder for arguments
+	query := fmt.Sprintf(
+		`select count(*) over(), * from movies 
+         		where (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) or $1 = '')
+			  	and (genres @> $2 or $2 = '{}')
+			  	order by %s %s, id asc 
+			  	limit $3 offset $4`, filter.sortColumn(), filter.sortDirection(),
+	)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := m.DB.QueryContext(ctx, query, title, pq.Array(genres))
+	args := []interface{}{title, pq.Array(genres), filter.limit(), filter.offset()}
+	rows, err := m.DB.QueryContext(ctx, query, args...)
+
 	if err != nil {
-		return nil, err
+		return nil, PaginationMetadata{}, err
 	}
 
 	defer rows.Close()
 
+	var totalRecords int
 	var movies []*Movie
 
 	for rows.Next() {
 		var movie Movie
 
 		err := rows.Scan(
+			&totalRecords,
 			&movie.ID,
 			&movie.Title,
 			&movie.Year,
@@ -149,17 +158,18 @@ func (m *MovieModel) GetAll(title string, genres []string, filter Filters) ([]*M
 		)
 
 		if err != nil {
-			return nil, err
+			return nil, PaginationMetadata{}, err
 		}
 
 		movies = append(movies, &movie)
 	}
 
 	if rows.Err() != nil {
-		return nil, err
+		return nil, PaginationMetadata{}, err
 	}
 
-	return movies, nil
+	paginationMetadata := calculatePaginationMetadata(totalRecords, filter.Page, filter.PageSize)
+	return movies, paginationMetadata, nil
 }
 
 func (m *MovieModel) Count() (int, error) {

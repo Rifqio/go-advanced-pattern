@@ -9,24 +9,25 @@ POST http://localhost:4000/v1/movies
 Content-Type: application/json
 
 {
-  "title": "Interstellar",
-  "year": 2014,
-  "runtime": 169,
+  "title": "Casablanca",
+  "year": 1942,
+  "runtime": 102,
   "genres": [
-    "Adventure",
-    "Drama",
-    "Sci-Fi"
+    "drama",
+    "romance",
+    "war"
   ],
-  "director": "Christopher Nolan",
+  "director": "Michael Curtiz",
   "actors": [
-    "Matthew McConaughey",
-    "Anne Hathaway",
-    "Jessica Chastain",
-    "Michael Caine"
+    "Humphrey Bogart",
+    "Ingrid Bergman",
+    "Paul Henreid",
+    "Claude Rains"
   ],
-  "plot": "A team of explorers travels through a wormhole in space in an attempt to ensure humanity's survival.",
-  "poster_url": "https://images-na.ssl-images-amazon.com/images/I/71v1icHXOWl._AC_SL1072_.jpg"
+  "plot": "A cynical American expatriate struggles to decide whether or not he should help his former lover and her fugitive husband escape the Nazis in French Morocco.",
+  "poster_url": "https://images-na.ssl-images-amazon.com/images/I/81shNfbnU4L._AC_SY679_.jpg"
 }
+
 
 ### Update Movie
 PATCH http://localhost:4000/v1/movies/11
@@ -63,5 +64,5 @@ Content-Type: application/json
 DELETE http://localhost:4000/v1/movies/13
 
 ### Filter Movie
-GET http://localhost:4000/v1/movies?page=1&page_size=3
+GET http://localhost:4000/v1/movies?page_size=5&page=4&sort=title
 #GET http://localhost:4000/v1/movies?title=godfather&genres=crime,drama&page=1&page_size=10&sort=title

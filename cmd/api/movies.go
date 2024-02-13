@@ -59,9 +59,11 @@ func (app *application) createMovieHandler(res http.ResponseWriter, req *http.Re
 
 	response := data.NewResponse()
 
-	response.StatusCode = http.StatusCreated
-	response.Result = movie
-	response.Message = "Movie Created Successfully"
+	response = data.Response{
+		StatusCode: http.StatusCreated,
+		Result:     movie,
+		Message:    "Movie Created Successfully",
+	}
 
 	err = app.writeJSON(res, response.StatusCode, response, headers)
 
@@ -90,8 +92,10 @@ func (app *application) showMovieHandler(res http.ResponseWriter, req *http.Requ
 	}
 
 	response := data.NewResponse()
-	response.Result = movie
-	response.Message = "Movie Retrieved Successfully"
+	response = data.Response{
+		Result:  movie,
+		Message: "Movie Retrieved Successfully",
+	}
 
 	err = app.writeJSON(res, 200, response, nil)
 
@@ -126,8 +130,8 @@ func (app *application) showMoviesHandler(res http.ResponseWriter, req *http.Req
 		return
 	}
 
-	count, err := app.models.Movie.Count()
-	movies, err := app.models.Movie.GetAll(requestQuery.Title, requestQuery.Genres, requestQuery.Filters)
+	//count, err := app.models.Movie.Count()
+	movies, paginationMetadata, err := app.models.Movie.GetAll(requestQuery.Title, requestQuery.Genres, requestQuery.Filters)
 
 	if err != nil {
 		app.internalServerErrorResponse(res, req, err)
@@ -137,12 +141,7 @@ func (app *application) showMoviesHandler(res http.ResponseWriter, req *http.Req
 	response := data.NewResponse()
 	response.Result = movies
 	response.Message = "Movies Fetched Successfully"
-	response.Pagination = data.Pagination{
-		PageSize:  requestQuery.PageSize,
-		Page:      requestQuery.Page,
-		TotalData: count,
-		Sort:      requestQuery.Sort,
-	}
+	response.Pagination = &paginationMetadata
 
 	err = app.writeJSON(res, 200, response, nil)
 
@@ -151,6 +150,7 @@ func (app *application) showMoviesHandler(res http.ResponseWriter, req *http.Req
 		return
 	}
 }
+
 func (app *application) updateMovieHandler(res http.ResponseWriter, req *http.Request) {
 	id, err := app.readIDParam(req)
 	if err != nil {
