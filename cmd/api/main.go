@@ -2,6 +2,7 @@ package main
 
 import (
 	"api.go-rifqio.my.id/internal/data"
+	newLogger "api.go-rifqio.my.id/internal/logger"
 	"context"
 	"database/sql"
 	"flag"
@@ -28,7 +29,7 @@ type config struct {
 
 type application struct {
 	config config
-	logger *log.Logger
+	logger *newLogger.Logger
 	models data.Models
 }
 
@@ -43,15 +44,15 @@ func main() {
 	flag.Parse()
 
 	// Create a new logger instance
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	logger := newLogger.New(os.Stdout, newLogger.LevelInfo)
 
 	db, err := openDB(cfg)
 	if err != nil {
-		logger.Fatal(err)
+		logger.PrintFatal(err, nil)
 	}
 
 	defer db.Close()
-	logger.Printf("Database connection established!")
+	logger.PrintInfo("Database connection established!", nil)
 
 	app := &application{
 		config: cfg,
@@ -62,14 +63,15 @@ func main() {
 	srv := &http.Server{
 		Addr:         cfg.port,
 		Handler:      app.routes(),
+		ErrorLog:     log.New(logger, "", 0),
 		IdleTimeout:  time.Minute,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
 
-	logger.Printf("Starting %s server on %s", cfg.env, srv.Addr)
+	logger.PrintInfo("Starting server on", map[string]string{"addr": cfg.env, "env": srv.Addr})
 	err = srv.ListenAndServe()
-	logger.Fatal(err)
+	logger.PrintFatal(err, nil)
 }
 
 func openDB(cfg config) (*sql.DB, error) {

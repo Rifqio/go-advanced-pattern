@@ -130,7 +130,6 @@ func (app *application) showMoviesHandler(res http.ResponseWriter, req *http.Req
 		return
 	}
 
-	//count, err := app.models.Movie.Count()
 	movies, paginationMetadata, err := app.models.Movie.GetAll(requestQuery.Title, requestQuery.Genres, requestQuery.Filters)
 
 	if err != nil {
@@ -139,9 +138,11 @@ func (app *application) showMoviesHandler(res http.ResponseWriter, req *http.Req
 	}
 
 	response := data.NewResponse()
-	response.Result = movies
-	response.Message = "Movies Fetched Successfully"
-	response.Pagination = &paginationMetadata
+	response = data.Response{
+		Result:     movies,
+		Message:    "Movies Fetched Successfully",
+		Pagination: &paginationMetadata,
+	}
 
 	err = app.writeJSON(res, 200, response, nil)
 

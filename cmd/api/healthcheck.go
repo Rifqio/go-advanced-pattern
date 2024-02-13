@@ -12,7 +12,7 @@ func (app *application) healthCheckHandler(res http.ResponseWriter, req *http.Re
 	}
 	err := app.writeJSON(res, 200, data, nil)
 	if err != nil {
-		app.logger.Println(err)
+		app.logger.PrintError(err, nil)
 		app.internalServerErrorResponse(res, req, err)
 	}
 }
