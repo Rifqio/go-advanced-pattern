@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"runtime/debug"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -61,22 +60,22 @@ func New(out io.Writer, minLevel Level) *Logger {
 }
 
 func (l *Logger) print(level Level, message string, properties map[string]string) (int, error) {
-	if level < l.minLevel {
-		return 0, nil
-	}
+	//if level < l.minLevel {
+	//	return 0, nil
+	//}
 
 	// Declare anonymous struct holding the data for the log entry
 	aux := struct {
-		Level      string            `json:"level"`
-		Time       string            `json:"time"`
-		Message    string            `json:"message"`
-		Properties map[string]string `json:"properties,omitempty"`
-		Trace      string            `json:"trace,omitempty"`
+		Level   string            `json:"level"`
+		Time    string            `json:"time"`
+		Message string            `json:"message"`
+		Args    map[string]string `json:"args,omitempty"`
+		Trace   string            `json:"trace,omitempty"`
 	}{
-		Level:      level.String(),
-		Time:       time.Now().UTC().Format(time.RFC3339),
-		Message:    message,
-		Properties: properties,
+		Level:   level.String(),
+		Time:    time.Now().UTC().Format(time.RFC3339),
+		Message: message,
+		Args:    properties,
 	}
 
 	// Include a stack trace for entries at the ERROR and FATAL fields
@@ -104,9 +103,13 @@ func (l *Logger) print(level Level, message string, properties map[string]string
 	return l.out.Write(append(line, '\n'))
 }
 
-func (l *Logger) PrintHTTP(request http.Request, response *http.Response) {
-	responseStatus := map[string]string{"Code": strconv.Itoa(response.StatusCode)}
-	l.print(LevelHTTP, request.Method, responseStatus)
+func (l *Logger) PrintHTTP(request *http.Request) {
+	formattedRequest := map[string]string{
+		"method":      request.Method,
+		"remote_addr": request.RemoteAddr,
+		"req_proto":   request.Proto,
+	}
+	l.print(LevelHTTP, request.URL.String(), formattedRequest)
 }
 
 func (l *Logger) PrintInfo(message string, properties map[string]string) {
