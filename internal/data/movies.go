@@ -31,12 +31,12 @@ type Movie struct {
 * DB.Exec() -is used for INSERT, UPDATE and DELETE queries, and it does not return any rows.
  */
 
-// Define a MovieModel struct type which wraps a sql.DB connection pool.
+// MovieModel Define a MovieModel struct type which wraps a sql.DB connection pool.
 type MovieModel struct {
 	DB *sql.DB
 }
 
-// If the receiver is a struct or array, any of whose elements is a pointer to something that may be mutated,
+// Insert If the receiver is a struct or array, any of whose elements is a pointer to something that may be mutated,
 // prefer a pointer receiver to make the intention of mutability clear to the reader.
 func (m *MovieModel) Insert(movie *Movie) error {
 	query := `insert into movies (title, year, runtime, genres, director, actors, plot, poster_url)

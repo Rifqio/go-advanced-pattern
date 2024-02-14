@@ -48,3 +48,8 @@ func (app *application) editConflictResponse(res http.ResponseWriter, req *http.
 	message := "Unable to update the record due to an edit conflict, please try again"
 	app.errorResponse(res, req, http.StatusConflict, message)
 }
+
+func (app *application) limitExceededResponse(res http.ResponseWriter, req *http.Request) {
+	message := "Error too many request"
+	app.errorResponse(res, req, http.StatusTooManyRequests, message)
+}
