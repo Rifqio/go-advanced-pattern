@@ -92,10 +92,8 @@ func (app *application) showMovieHandler(res http.ResponseWriter, req *http.Requ
 	}
 
 	response := data.NewResponse()
-	response = data.Response{
-		Result:  movie,
-		Message: "Movie Retrieved Successfully",
-	}
+	response.Result = movie
+	response.Message = "Movie Retrieved Successfully"
 
 	err = app.writeJSON(res, 200, response, nil)
 
@@ -138,11 +136,9 @@ func (app *application) showMoviesHandler(res http.ResponseWriter, req *http.Req
 	}
 
 	response := data.NewResponse()
-	response = data.Response{
-		Result:     movies,
-		Message:    "Movies Fetched Successfully",
-		Pagination: &paginationMetadata,
-	}
+	response.Result = movies
+	response.Message = "Movies Fetched Successfully"
+	response.Pagination = &paginationMetadata
 
 	err = app.writeJSON(res, 200, response, nil)
 
