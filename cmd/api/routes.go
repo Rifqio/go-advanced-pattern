@@ -19,6 +19,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodPatch, "/v1/movies/:id", app.updateMovieHandler)
 	router.HandlerFunc(http.MethodDelete, "/v1/movies/:id", app.deleteMovieHandler)
 
+	router.HandlerFunc(http.MethodPost, "/v1/users", app.registerUserHandler)
 	//return app.recoverPanic(app.rateLimiter(router))
 	standard := alice.New(app.requestLogger, app.rateLimiter, app.recoverPanic)
 	return standard.Then(router)
