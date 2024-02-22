@@ -14,6 +14,7 @@ var (
 // like a UserModel and PermissionModel, as the build progresses
 type Models struct {
 	Movie *MovieModel
+	User  *UserModel
 }
 
 // For ease of use, I also add a New() method which returns a Models struct containing
@@ -21,5 +22,6 @@ type Models struct {
 func NewModels(db *sql.DB) Models {
 	return Models{
 		Movie: &MovieModel{DB: db},
+		User:  &UserModel{DB: db},
 	}
 }
