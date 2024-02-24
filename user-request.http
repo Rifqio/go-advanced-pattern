@@ -4,7 +4,7 @@ POST http://localhost:4000/v1/users
 Content-Type: application/json
 
 {
-  "name" : "Sunil Malik",
-  "email" : "AnhKhaled@gmail.com",
+  "name" : "Pushpa Soto",
+  "email" : "MuhammadWeng@gmail.com",
   "password" : "12345678"
 }

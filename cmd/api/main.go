@@ -3,6 +3,7 @@ package main
 import (
 	"api.go-rifqio.my.id/internal/data"
 	newLogger "api.go-rifqio.my.id/internal/logger"
+	"api.go-rifqio.my.id/internal/smtp"
 	"context"
 	"database/sql"
 	"flag"
@@ -13,6 +14,7 @@ import (
 	"github.com/simukti/sqldb-logger/logadapter/zerologadapter"
 	"log"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -30,19 +32,35 @@ type config struct {
 		burst   int
 		enabled bool
 	}
+
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
+		sender   string
+	}
 }
 
 type application struct {
 	config config
 	logger *newLogger.Logger
 	models data.Models
+	mailer smtp.Mailer
 }
 
 func main() {
 	var cfg config
 	dbUrl := getEnv("POSTGRES_URL")
+	smtpPort := getEnv("SMTP_PORT")
 
-	flag.StringVar(&cfg.port, "port", "localhost:4000", "API server port")
+	cfg.smtp.host = getEnv("SMTP_HOST")
+	cfg.smtp.port, _ = strconv.Atoi(smtpPort)
+	cfg.smtp.username = getEnv("SMTP_USERNAME")
+	cfg.smtp.password = getEnv("SMTP_PASSWORD")
+	cfg.smtp.sender = getEnv("SMTP_SENDER")
+
+	flag.StringVar(&cfg.port, "smtp_port", "localhost:4000", "API server smtp_port")
 	flag.StringVar(&cfg.env, "env", "dev", "App environment (dev|staging|prod)")
 	flag.StringVar(&cfg.db.dsn, "db-dsn", dbUrl, "PostgreSQL DSN")
 
@@ -67,6 +85,13 @@ func main() {
 		config: cfg,
 		logger: logger,
 		models: data.NewModels(db),
+		mailer: smtp.New(
+			cfg.smtp.host,
+			cfg.smtp.port,
+			cfg.smtp.username,
+			cfg.smtp.password,
+			cfg.smtp.sender,
+		),
 	}
 
 	err = app.serve()

@@ -52,6 +52,12 @@ func (app *application) registerUserHandler(res http.ResponseWriter, req *http.R
 		return
 	}
 
+	err = app.mailer.Send(user.Email, "user_welcome.tmpl", user)
+	if err != nil {
+		app.internalServerErrorResponse(res, req, err)
+		return
+	}
+
 	response := data.NewResponse()
 	response.StatusCode = 201
 	response.Result = user
