@@ -5,6 +5,7 @@ import (
 	"api.go-rifqio.my.id/internal/validator"
 	"errors"
 	"net/http"
+	"time"
 )
 
 func (app *application) registerUserHandler(res http.ResponseWriter, req *http.Request) {
@@ -52,11 +53,25 @@ func (app *application) registerUserHandler(res http.ResponseWriter, req *http.R
 		return
 	}
 
-	err = app.mailer.Send(user.Email, "user_welcome.tmpl", user)
+	// After user is generated in the database, generate a new activation token
+	token, err := app.models.Tokens.New(user.ID, 3*24*time.Hour, data.ScopeActivations)
 	if err != nil {
 		app.internalServerErrorResponse(res, req, err)
 		return
 	}
+
+	// Launch a background go routine to send email
+	app.background(func() {
+		dataEmail := map[string]interface{}{
+			"activationToken": token.PlainText,
+			"userID":          user.ID,
+		}
+		err = app.mailer.Send(user.Email, "user_welcome.tmpl", dataEmail)
+		if err != nil {
+			app.internalServerErrorResponse(res, req, err)
+			return
+		}
+	})
 
 	response := data.NewResponse()
 	response.StatusCode = 201

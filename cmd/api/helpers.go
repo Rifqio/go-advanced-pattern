@@ -113,3 +113,18 @@ func (app *application) readJSON(res http.ResponseWriter, req *http.Request, dst
 	}
 	return nil
 }
+
+func (app *application) background(fn func()) {
+	app.wg.Add(1)
+	go func() {
+		defer app.wg.Done()
+		// Run a deferred function which uses recover() to catch any panic, and log
+		// error message instead of terminating application
+		defer func() {
+			if err := recover(); err != nil {
+				app.logger.PrintError(fmt.Errorf("%s", err), nil)
+			}
+		}()
+	}()
+	fn()
+}
