@@ -36,10 +36,18 @@ func (app *application) serve() error {
 		app.logger.PrintInfo("shutting down", map[string]string{"signal": s.String()})
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		// instead of using os.Exit(0) we use srv.Shutdown
-		// to determine if graceful shutdown success it will return 0
-		// otherwise it will return an error
-		shutdownError <- srv.Shutdown(ctx)
+
+		err := srv.Shutdown(ctx)
+		if err != nil {
+			shutdownError <- err
+		}
+
+		app.logger.PrintInfo("completing background task", map[string]string{
+			"addr": srv.Addr,
+		})
+
+		app.wg.Wait()
+		shutdownError <- nil
 	}()
 
 	app.logger.PrintInfo("Starting server on", map[string]string{"addr": app.config.env, "env": srv.Addr})

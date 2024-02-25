@@ -15,6 +15,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -47,6 +48,7 @@ type application struct {
 	logger *newLogger.Logger
 	models data.Models
 	mailer smtp.Mailer
+	wg     sync.WaitGroup
 }
 
 func main() {
